@@ -2,7 +2,7 @@
 """ ssh to an ansible host using all ansible's connection info.
 
     Usage:
-        ansible-ssh inventory_path hostname
+        ansible-ssh [-i inventory_path] hostname
 """
 from __future__ import print_function
 
@@ -11,7 +11,16 @@ __version__ = "0.0"
 import sys, json, subprocess
 
 def main():
-    inventory_path, hostname = sys.argv[1:]
+
+    if len(sys.argv) == 1:
+        inventory_path = '/etc/ansible/hosts'
+        hostname = None
+    else:
+        inventory_path = sys.argv[2] if '-i' in sys.argv else '/etc/ansible/hosts'
+        hostname = sys.argv[-1] if sys.argv[-1] != inventory_path else None
+    if hostname is None:
+        exit('ERROR: must provide a hostname')
+
     host_info = subprocess.check_output(('ansible-inventory', '-i', inventory_path, '--host', hostname))
     h =  json.loads(host_info)
     # ssh -o ProxyCommand="ssh centos@128.232.226.6 -W %h:%p" centos@128.232.226.6
